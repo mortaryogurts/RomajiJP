@@ -29,6 +29,9 @@ import com.example.romajijp.databinding.ActivityMainBinding
 import com.example.romajijp.searchhistorymanager.SearchHistoryManager
 import com.example.romajijp.uistate.MusicUiState
 import com.example.romajijp.viewmodel.MusicViewModel
+import com.example.romajijp.model.Song
+import com.example.romajijp.repository.MusicRepository
+import android.content.Intent
 
 class  MainActivity : AppCompatActivity() {
 
@@ -40,6 +43,7 @@ class  MainActivity : AppCompatActivity() {
     private lateinit var adapter: SongAdapter
     private lateinit var viewModel: MusicViewModel
     private lateinit var binding: ActivityMainBinding
+    private val repository = MusicRepository()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -88,12 +92,37 @@ class  MainActivity : AppCompatActivity() {
     }
 
     private fun setUpRecyclerView() {
-        adapter = SongAdapter()
+        adapter = SongAdapter { song ->
+            onSongClicked(song)
+        }
         binding.songRecyclerView.apply {
             layoutManager = GridLayoutManager(this@MainActivity, 2)
             adapter = this@MainActivity.adapter
         }
         binding.header.setText("Search Results")
+    }
+
+    private fun onSongClicked(song: Song) {
+        lifecycleScope.launch {
+            binding.isLoading = true
+            val lyrics = repository.fetchLyrics(
+                song.title,
+                song.artist,
+                song.album,
+                song.durationMillis
+            )
+            binding.isLoading = false
+            
+            val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
+                putExtra("song_title", song.title)
+                putExtra("song_artist", song.artist)
+                putExtra("song_album", song.album)
+                putExtra("song_lyrics", lyrics)
+                putExtra("song_artwork", song.artworkUrl)
+                putExtra("song_duration", song.durationMillis)
+            }
+            startActivity(intent)
+        }
     }
 
     private fun performSearch(query: String) {

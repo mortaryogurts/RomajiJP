@@ -1,7 +1,9 @@
 package com.example.romajijp.searchhistorymanager
 
 import android.content.Context
+import android.os.Build
 import androidx.activity.contextaware.ContextAware
+import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -9,8 +11,9 @@ class SearchHistoryManager(context : Context) {
     private val prefs = context.getSharedPreferences("search_history", Context.MODE_PRIVATE)
     private val gson = Gson()
     private val KEY = "queries"
-    private val MAX = 50
+    private val MAX = 10
 
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     fun saveQuery(query: String) {
         if (query.isBlank()) return
 
