@@ -31,10 +31,11 @@ public class LyricsDisplay extends AppCompatActivity {
         String artist = getIntent().getStringExtra("song_artist");
         String album = getIntent().getStringExtra("song_album");
         String lyrics = getIntent().getStringExtra("song_lyrics");
+        String artwork = getIntent().getStringExtra("song_artwork");
 
 
         if (title != null && artist != null) {
-            Song song = new Song(0, title, artist, album, lyrics);
+            Song song = new Song(0, title, artist, album, lyrics, artwork);
             binding.setSong(song);
             binding.toolbar.setTitle(title);
         }

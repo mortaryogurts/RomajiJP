@@ -11,17 +11,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
+import android.widget.Toast
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.romajijp.R
+import kotlinx.coroutines.launch
 import com.example.romajijp.adapter.SearchHistoryAdapter
 import com.example.romajijp.adapter.SongAdapter
 import com.example.romajijp.databinding.ActivityMainBinding
 import com.example.romajijp.searchhistorymanager.SearchHistoryManager
-import com.example.romajijp.viewmodel.LyricsViewModel
+import com.example.romajijp.uistate.MusicUiState
+import com.example.romajijp.viewmodel.MusicViewModel
 
 class  MainActivity : AppCompatActivity() {
 
@@ -31,7 +38,7 @@ class  MainActivity : AppCompatActivity() {
     private var searchRunnable: Runnable? = null
     private val DEBOUNCE_DELAY = 300L // ms
     private lateinit var adapter: SongAdapter
-    private lateinit var viewModel: LyricsViewModel
+    private lateinit var viewModel: MusicViewModel
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,18 +54,10 @@ class  MainActivity : AppCompatActivity() {
         setUpHistoryRecyclerView()
         setUpRecyclerView()
 
-        viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
+        viewModel = ViewModelProvider(this).get(MusicViewModel::class.java)
+        observeUiState()
 
-        viewModel.songLiveData.observe(this) { songs ->
-            adapter.updateSongs(songs)
-            if (songs.isNotEmpty()) {
-                binding.previousSearch = true
-            }
-        }
 
-        viewModel.loading.observe(this) { isLoading ->
-            binding.isLoading = isLoading
-        }
         
         binding.getSong.setOnEditorActionListener { _, i, _ ->
             if (i == EditorInfo.IME_ACTION_SEARCH){
@@ -109,4 +108,34 @@ class  MainActivity : AppCompatActivity() {
         super.onDestroy()
         searchRunnable?.let { searchHandler.removeCallbacks(it) } // prevent leaks
     }
+
+    private fun observeUiState() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is MusicUiState.Idle    -> {
+                            binding.isLoading = false
+                            binding.previousSearch = false
+                        }
+                        is MusicUiState.Loading -> {
+                            binding.isLoading = true
+                            binding.previousSearch = true
+                        }
+                        is MusicUiState.Success -> {
+                            binding.isLoading = false
+                            binding.previousSearch = true
+                            adapter.updateSongs(state.songs)
+                        }
+                        is MusicUiState.Error -> {
+                            binding.isLoading = false
+                            binding.previousSearch = false
+                            Toast.makeText(this@MainActivity, state.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -37,6 +37,7 @@ class SongAdapter(private var songs : List<Song> = emptyList()): RecyclerView.Ad
                 putExtra("song_artist", song.artist)
                 putExtra("song_album", song.album)
                 putExtra("song_lyrics", song.lyrics)
+                putExtra("song_artwork", song.artworkUrl)
             }
             context.startActivity(intent)
         }

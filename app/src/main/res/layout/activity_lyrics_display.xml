@@ -59,8 +59,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"
-                        android:src="@android:drawable/ic_menu_report_image"
-                        android:alpha="0.5"
+                        app:imageUrl="@{song.artworkUrl}"
                         tools:ignore="ContentDescription"
                         tools:src="@tools:sample/backgrounds/scenic" />
 
