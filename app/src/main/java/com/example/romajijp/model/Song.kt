@@ -5,5 +5,7 @@ data class Song(
     val title: String,
     val artist: String,
     val album: String?,
-    val lyrics: String?
+    var lyrics: String?,
+    val artworkUrl: String?,
+    val durationMillis: Long = 0
 )

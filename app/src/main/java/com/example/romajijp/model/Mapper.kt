@@ -9,6 +9,7 @@ fun SongResponse.toSong(): Song {
         title = trackName,
         artist = artistName,
         album = albumName,
-        lyrics = plainLyrics
+        lyrics = plainLyrics,
+        artworkUrl = artworkUrl
     )
 }

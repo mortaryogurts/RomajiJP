@@ -5,5 +5,6 @@ data class SongResponse(
     val trackName: String,
     val artistName: String,
     val albumName: String?,
-    val plainLyrics: String?
+    val plainLyrics: String?,
+    val artworkUrl: String?
 )
