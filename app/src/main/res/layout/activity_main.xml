@@ -8,6 +8,9 @@
             name="previousSearch"
             type="boolean" />
         <variable
+            name="isEmpty"
+            type="boolean" />
+        <variable
             name="isLoading"
             type="boolean" />
     </data>
@@ -76,6 +79,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvEmptyState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No results found."
+            android:textSize="18sp"
+            android:visibility="@{isEmpty ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toTopOf="@+id/get_song"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/header" />
 
         <EditText
             android:id="@+id/get_song"

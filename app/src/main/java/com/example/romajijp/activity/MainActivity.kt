@@ -7,6 +7,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -16,7 +17,6 @@ import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import android.widget.Toast
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
@@ -41,24 +41,31 @@ class  MainActivity : AppCompatActivity() {
     private var searchRunnable: Runnable? = null
     private val DEBOUNCE_DELAY = 300L // ms
     private lateinit var adapter: SongAdapter
-    private lateinit var viewModel: MusicViewModel
+    private val viewModel: MusicViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
-    private val repository = MusicRepository()
+    private var lastClickTime: Long = 0
+    private val CLICK_INTERVAL = 500L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = DataBindingUtil.setContentView(this@MainActivity, R.layout.activity_main)
-        WindowCompat.setDecorFitsSystemWindows(window, true)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(
+                systemBars.left,
+                systemBars.top,
+                systemBars.right,
+                maxOf(systemBars.bottom, ime.bottom)
+            )
             insets
         }
         historyManager = SearchHistoryManager(this)
         setUpHistoryRecyclerView()
         setUpRecyclerView()
 
-        viewModel = ViewModelProvider(this).get(MusicViewModel::class.java)
         observeUiState()
 
 
@@ -103,26 +110,18 @@ class  MainActivity : AppCompatActivity() {
     }
 
     private fun onSongClicked(song: Song) {
-        lifecycleScope.launch {
-            binding.isLoading = true
-            val lyrics = repository.fetchLyrics(
-                song.title,
-                song.artist,
-                song.album,
-                song.durationMillis
-            )
-            binding.isLoading = false
-            
-            val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
-                putExtra("song_title", song.title)
-                putExtra("song_artist", song.artist)
-                putExtra("song_album", song.album)
-                putExtra("song_lyrics", lyrics)
-                putExtra("song_artwork", song.artworkUrl)
-                putExtra("song_duration", song.durationMillis)
-            }
-            startActivity(intent)
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime < CLICK_INTERVAL) return
+        lastClickTime = currentTime
+
+        val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
+            putExtra("song_title", song.title)
+            putExtra("song_artist", song.artist)
+            putExtra("song_album", song.album)
+            putExtra("song_artwork", song.artworkUrl)
+            putExtra("song_duration", song.durationMillis)
         }
+        startActivity(intent)
     }
 
     private fun performSearch(query: String) {
@@ -146,19 +145,28 @@ class  MainActivity : AppCompatActivity() {
                         is MusicUiState.Idle    -> {
                             binding.isLoading = false
                             binding.previousSearch = false
+                            binding.isEmpty = false
                         }
                         is MusicUiState.Loading -> {
                             binding.isLoading = true
                             binding.previousSearch = true
+                            binding.isEmpty = false
+                        }
+                        is MusicUiState.Empty -> {
+                            binding.isLoading = false
+                            binding.previousSearch = true
+                            binding.isEmpty = true
                         }
                         is MusicUiState.Success -> {
                             binding.isLoading = false
                             binding.previousSearch = true
+                            binding.isEmpty = false
                             adapter.updateSongs(state.songs)
                         }
                         is MusicUiState.Error -> {
                             binding.isLoading = false
                             binding.previousSearch = false
+                            binding.isEmpty = false
                             Toast.makeText(this@MainActivity, state.message, Toast.LENGTH_SHORT).show()
                         }
                     }

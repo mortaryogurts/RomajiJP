@@ -2,8 +2,6 @@ package com.example.romajijp.searchhistorymanager
 
 import android.content.Context
 import android.os.Build
-import androidx.activity.contextaware.ContextAware
-import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -13,7 +11,6 @@ class SearchHistoryManager(context : Context) {
     private val KEY = "queries"
     private val MAX = 10
 
-    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     fun saveQuery(query: String) {
         if (query.isBlank()) return
 
@@ -23,7 +20,7 @@ class SearchHistoryManager(context : Context) {
         list.add(0, query)        // add to top (most recent first)
 
         if (list.size > MAX) {
-            list.removeLast()     // drop oldest if over limit
+            list.removeAt(list.size - 1)     // drop oldest if over limit
         }
 
         prefs.edit()
