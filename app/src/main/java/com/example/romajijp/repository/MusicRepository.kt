@@ -7,15 +7,16 @@ import com.example.romajijp.retrofit.ITunesRetrofitClient
 import com.example.romajijp.retrofit.LrClibRetrofitClient
 import com.example.romajijp.uistate.MusicUiState
 
-class MusicRepository {
+class MusicRepository(context: android.content.Context? = null) {
     private val lrclibApi: LrClibClient = LrClibRetrofitClient.instance
     private val iTunesApi: ITunesClient = ITunesRetrofitClient.instance
+    private val songDao by lazy { context?.let { com.example.romajijp.db.AppDatabase.getDatabase(it).songDao() } }
 
     suspend fun fetchSongData(userQuery: String): MusicUiState {
         return try {
             val itunesResult = iTunesApi.searchTrack(userQuery)
             if (itunesResult.results.isEmpty())
-                return MusicUiState.Error("No results found for \"$userQuery\"")
+                return MusicUiState.Empty
 
             val songs = itunesResult.results.map { track ->
                 Song(
@@ -35,9 +36,18 @@ class MusicRepository {
     }
 
     suspend fun fetchLyrics(title: String, artist: String, album: String?, durationMillis: Long): String? {
+        val cacheId = "${title.lowercase()}_${artist.lowercase()}"
+        
+        // 1. Try Cache
+        val cached = songDao?.getSong(cacheId)
+        if (cached?.lyrics != null) {
+            return cached.lyrics
+        }
+
+        // 2. Try Network
         return try {
             val durationSeconds = (durationMillis / 1000).toInt()
-            try {
+            val lyrics = try {
                 // Exact match
                 val track = lrclibApi.getLyrics(title, artist, album ?: "", durationSeconds)
                 track.plainLyrics
@@ -48,6 +58,22 @@ class MusicRepository {
                     searchResults[0].plainLyrics
                 } else null
             }
+
+            // 3. Save to Cache if found
+            if (lyrics != null) {
+                songDao?.insertSong(
+                    com.example.romajijp.db.SongCache(
+                        cacheId = cacheId,
+                        title = title,
+                        artist = artist,
+                        album = album,
+                        lyrics = lyrics,
+                        artworkUrl = null, // We can store this too if needed
+                        durationMillis = durationMillis
+                    )
+                )
+            }
+            lyrics
         } catch (e: Exception) {
             null
         }
