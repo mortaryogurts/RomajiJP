@@ -68,8 +68,11 @@ class  MainActivity : AppCompatActivity() {
 
         observeUiState()
 
+        binding.btnLibrary.setOnClickListener {
+            val intent = Intent(this, LibraryActivity::class.java)
+            startActivity(intent)
+        }
 
-        
         binding.getSong.setOnEditorActionListener { _, i, _ ->
             if (i == EditorInfo.IME_ACTION_SEARCH){
                 val query = binding.getSong.text.toString().trim()
