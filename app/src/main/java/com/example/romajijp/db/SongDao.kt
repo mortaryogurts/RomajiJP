@@ -9,4 +9,7 @@ interface SongDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSong(song: SongCache)
+
+    @Query("SELECT * FROM song_cache ORDER BY timestamp DESC")
+    suspend fun getAllSongs(): List<SongCache>
 }

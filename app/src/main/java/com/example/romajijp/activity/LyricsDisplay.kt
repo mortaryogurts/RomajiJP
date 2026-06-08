@@ -71,6 +71,19 @@ class LyricsDisplay : AppCompatActivity() {
         binding.btnRomanizedLyrics.setOnClickListener {
             binding.lyricsText.text = romanizedLyrics
         }
+
+        binding.btnDownload.setOnClickListener {
+            binding.song?.let { currentSong ->
+                lifecycleScope.launch {
+                    repository.downloadSong(currentSong)
+                    android.widget.Toast.makeText(
+                        this@LyricsDisplay,
+                        "Song saved to library",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
 
     private fun fetchLyrics(song: Song) {

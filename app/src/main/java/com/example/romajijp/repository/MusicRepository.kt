@@ -78,4 +78,19 @@ class MusicRepository(context: android.content.Context? = null) {
             null
         }
     }
+
+    suspend fun downloadSong(song: Song){
+        val cacheId = "${song.title.lowercase()}_${song.artist.lowercase()}"
+        songDao?.insertSong(
+            com.example.romajijp.db.SongCache(
+                cacheId = cacheId,
+                title = song.title,
+                artist = song.artist,
+                album = song.album,
+                lyrics = song.lyrics,
+                artworkUrl = song.artworkUrl,
+                durationMillis = song.durationMillis
+            )
+        )
+    }
 }
