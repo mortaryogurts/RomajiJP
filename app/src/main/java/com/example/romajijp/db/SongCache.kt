@@ -12,5 +12,6 @@ data class SongCache(
     val lyrics: String?,
     val artworkUrl: String?,
     val durationMillis: Long,
+    val isSaved: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )

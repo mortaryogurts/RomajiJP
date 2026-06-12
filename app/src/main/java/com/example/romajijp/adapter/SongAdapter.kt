@@ -10,7 +10,8 @@ import com.example.romajijp.model.Song
 
 class SongAdapter(
     private var songs: List<Song> = emptyList(),
-    private val onSongClicked: (Song) -> Unit
+    private val onSongClicked: (Song) -> Unit,
+    private val onSongLongClicked: ((Song) -> Unit)? = null
 ) : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
 
     class SongViewHolder(val binding: SongItemBinding) : RecyclerView.ViewHolder(binding.root)
@@ -30,6 +31,11 @@ class SongAdapter(
 
         holder.binding.root.setOnClickListener {
             onSongClicked(song)
+        }
+
+        holder.binding.root.setOnLongClickListener {
+            onSongLongClicked?.invoke(song)
+            true
         }
         holder.binding.executePendingBindings()
     }

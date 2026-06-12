@@ -33,6 +33,13 @@ import com.example.romajijp.model.Song
 import com.example.romajijp.repository.MusicRepository
 import android.content.Intent
 
+import android.content.Context
+import android.graphics.Rect
+import android.view.MotionEvent
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import androidx.activity.addCallback
+
 class  MainActivity : AppCompatActivity() {
 
     private lateinit var historyManager: SearchHistoryManager
@@ -68,9 +75,39 @@ class  MainActivity : AppCompatActivity() {
 
         observeUiState()
 
+        onBackPressedDispatcher.addCallback(this) {
+            if (binding.topSheetCard.visibility == android.view.View.VISIBLE) {
+                binding.getSong.clearFocus()
+                val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(binding.getSong.windowToken, 0)
+            } else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        }
+
         binding.btnLibrary.setOnClickListener {
             val intent = Intent(this, LibraryActivity::class.java)
             startActivity(intent)
+        }
+
+        binding.main.setOnClickListener {
+            binding.getSong.clearFocus()
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.hideSoftInputFromWindow(it.windowToken, 0)
+        }
+
+        binding.getSong.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                showTopSheet()
+            } else {
+                hideTopSheet()
+            }
+        }
+
+        binding.getSong.setOnClickListener {
+            showTopSheet()
         }
 
         binding.getSong.setOnEditorActionListener { _, i, _ ->
@@ -81,20 +118,44 @@ class  MainActivity : AppCompatActivity() {
                     historyAdapter.updateHistory(historyManager.getQueries())
                     performSearch(query)
                 }
+                hideTopSheet()
+                binding.getSong.clearFocus()
                 true
             }else false
         }
+    }
 
+    private fun showTopSheet() {
+        val history = historyManager.getQueries()
+        if (history.isNotEmpty()) {
+            historyAdapter.updateHistory(history)
+            binding.topSheetCard.visibility = android.view.View.VISIBLE
+        }
+    }
 
+    private fun hideTopSheet() {
+        binding.topSheetCard.visibility = android.view.View.GONE
     }
 
     private fun setUpHistoryRecyclerView() {
-        historyAdapter = SearchHistoryAdapter(historyManager.getQueries()) { selectedQuery ->
-            binding.getSong.setText(selectedQuery)
-            // Move cursor to end
-            binding.getSong.setSelection(selectedQuery.length)
-            performSearch(selectedQuery)
-        }
+        historyAdapter = SearchHistoryAdapter(
+            history = historyManager.getQueries(),
+            onQueryClick = { selectedQuery ->
+                binding.getSong.setText(selectedQuery)
+                binding.getSong.setSelection(selectedQuery.length)
+                performSearch(selectedQuery)
+                hideTopSheet()
+                binding.getSong.clearFocus()
+            },
+            onDeleteClick = { queryToDelete ->
+                historyManager.deleteQuery(queryToDelete)
+                val updatedHistory = historyManager.getQueries()
+                historyAdapter.updateHistory(updatedHistory)
+                if (updatedHistory.isEmpty()) {
+                    hideTopSheet()
+                }
+            }
+        )
         binding.historyRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = historyAdapter
@@ -102,14 +163,13 @@ class  MainActivity : AppCompatActivity() {
     }
 
     private fun setUpRecyclerView() {
-        adapter = SongAdapter { song ->
+        adapter = SongAdapter(onSongClicked = { song ->
             onSongClicked(song)
-        }
+        })
         binding.songRecyclerView.apply {
             layoutManager = GridLayoutManager(this@MainActivity, 2)
             adapter = this@MainActivity.adapter
         }
-        binding.header.setText("Search Results")
     }
 
     private fun onSongClicked(song: Song) {
@@ -178,4 +238,24 @@ class  MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        if (ev?.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is android.widget.EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                val sheetRect = Rect()
+                binding.topSheetCard.getGlobalVisibleRect(sheetRect)
+
+                if (!outRect.contains(ev.rawX.toInt(), ev.rawY.toInt()) &&
+                    (binding.topSheetCard.visibility != View.VISIBLE || !sheetRect.contains(ev.rawX.toInt(), ev.rawY.toInt()))
+                ) {
+                    v.clearFocus()
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.windowToken, 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
+    }
 }

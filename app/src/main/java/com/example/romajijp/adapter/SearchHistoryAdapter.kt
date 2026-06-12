@@ -7,7 +7,8 @@ import com.example.romajijp.databinding.RecentSearchesItemBinding
 
 class SearchHistoryAdapter(
     private var history: List<String> = emptyList(),
-    private val onQueryClick: (String) -> Unit
+    private val onQueryClick: (String) -> Unit,
+    private val onDeleteClick: (String) -> Unit
 ) : RecyclerView.Adapter<SearchHistoryAdapter.HistoryViewHolder>() {
 
     class HistoryViewHolder(val binding: RecentSearchesItemBinding) : RecyclerView.ViewHolder(binding.root)
@@ -27,6 +28,10 @@ class SearchHistoryAdapter(
         
         holder.itemView.setOnClickListener {
             onQueryClick(query)
+        }
+
+        holder.binding.ivDelete.setOnClickListener {
+            onDeleteClick(query)
         }
         
         holder.binding.executePendingBindings()

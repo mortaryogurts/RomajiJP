@@ -19,19 +19,63 @@
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#2D0B1C"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         tools:context=".activity.MainActivity">
 
-        <TextView
-            android:id="@+id/header"
-            android:layout_width="wrap_content"
+        <!-- Search Bar at the Top -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/searchCard"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:visibility="@{previousSearch ? View.VISIBLE : View.GONE}"
-            android:text="RecentSearches"
-            android:textSize="30sp"
+            android:layout_marginEnd="8dp"
+            app:cardBackgroundColor="#FDE6D2"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toStartOf="@+id/btnLibrary"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <ImageView
+                    android:id="@+id/ivSearchIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="#2D0B1C" />
+
+                <EditText
+                    android:id="@+id/get_song"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@android:color/transparent"
+                    android:hint="Search"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:textColor="#2D0B1C"
+                    android:textColorHint="#6D4B5C"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/ivSearchIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLibrary"
@@ -41,50 +85,29 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             app:icon="@android:drawable/ic_menu_save"
+            app:iconTint="#FDE6D2"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/Welcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="61dp"
-            android:text="@string/welcome_to_nromaji"
-            android:visibility="@{previousSearch ? View.GONE : View.VISIBLE}"
-            android:textAlignment="center"
-            android:textSize="50sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+        <!-- Results / Main Content -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/history_recycler_view"
+            android:id="@+id/song_recycler_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="@{!previousSearch ? View.VISIBLE : View.GONE}"
-            app:layout_constraintBottom_toTopOf="@+id/get_song"
+            android:clipToPadding="false"
+            android:padding="8dp"
+            android:visibility="@{previousSearch &amp;&amp; !isLoading ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Welcome" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:layout_width="0dp"
-            android:id="@+id/song_recycler_view"
-            android:layout_height="0dp"
-            android:layout_marginTop="77dp"
-            android:layout_marginBottom="28dp"
-            app:layout_constraintBottom_toTopOf="@+id/get_song"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:visibility="@{previousSearch &amp;&amp; !isLoading ? View.VISIBLE : View.GONE}" />
+            app:layout_constraintTop_toBottomOf="@+id/searchCard" />
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:indeterminateTint="#FDE6D2"
             android:visibility="@{isLoading ? View.VISIBLE : View.GONE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -96,25 +119,71 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="No results found."
+            android:textColor="#FDE6D2"
             android:textSize="18sp"
             android:visibility="@{isEmpty ? View.VISIBLE : View.GONE}"
-            app:layout_constraintBottom_toTopOf="@+id/get_song"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/header" />
-
-        <EditText
-            android:id="@+id/get_song"
-            android:layout_width="353dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="28dp"
-            android:ems="10"
-            android:hint="Search your favourite songs"
-            android:inputType="text"
-            android:imeOptions="actionSearch"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/searchCard" />
+
+        <TextView
+            android:id="@+id/Welcome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/welcome_to_nromaji"
+            android:textAlignment="center"
+            android:textColor="#FDE6D2"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:visibility="@{previousSearch ? View.GONE : View.VISIBLE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/searchCard" />
+
+        <!-- "Top Sheet" / Dropdown for Recent Searches -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/topSheetCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-28dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FDE6D2"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="2dp"
+            app:layout_constraintEnd_toEndOf="@+id/searchCard"
+            app:layout_constraintStart_toStartOf="@+id/searchCard"
+            app:layout_constraintTop_toBottomOf="@+id/searchCard"
+            tools:visibility="visible">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="32dp"
+                android:paddingBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tvRecentHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="Recent searches"
+                    android:textColor="#6D4B5C"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/historyRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/tvRecentHeader"
+                    tools:listitem="@layout/recent_searches_item" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
