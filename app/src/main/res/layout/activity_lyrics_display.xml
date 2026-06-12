@@ -13,6 +13,9 @@
         <variable
             name="isLoading"
             type="Boolean" />
+        <variable
+            name="isSaved"
+            type="Boolean" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -20,13 +23,14 @@
         android:fitsSystemWindows="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#2D0B1C"
         tools:context=".activity.LyricsDisplay">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/colorSurface"
+            android:background="#2D0B1C"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.appbar.MaterialToolbar
@@ -34,6 +38,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:title="Lyrics"
+                app:titleTextColor="#FDE6D2"
+                app:navigationIconTint="#FDE6D2"
                 app:navigationIcon="?attr/homeAsUpIndicator" />
 
         </com.google.android.material.appbar.AppBarLayout>
@@ -42,6 +48,7 @@
             android:id="@+id/loadingProgressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:indeterminateTint="#FDE6D2"
             android:visibility="@{isLoading ? android.view.View.VISIBLE : android.view.View.GONE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -65,8 +72,10 @@
                     android:id="@+id/albumCoverCard"
                     android:layout_width="200dp"
                     android:layout_height="200dp"
-                    app:cardCornerRadius="12dp"
-                    app:cardElevation="4dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="8dp"
+                    app:strokeColor="#FDE6D2"
+                    app:strokeWidth="2dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
@@ -89,6 +98,7 @@
                     android:layout_marginTop="24dp"
                     android:text="@{song.title}"
                     android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                    android:textColor="#FDE6D2"
                     android:textStyle="bold"
                     android:gravity="center"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -103,7 +113,7 @@
                     android:layout_marginTop="8dp"
                     android:text="@{song.artist}"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="#C0A0B0"
                     android:gravity="center"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -117,7 +127,7 @@
                     android:layout_marginTop="4dp"
                     android:text="@{song.album}"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="#A08090"
                     android:gravity="center"
                     android:visibility="@{song.album != null ? android.view.View.VISIBLE : android.view.View.GONE}"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -127,12 +137,16 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDownload"
-                    style="@style/Widget.Material3.Button.TonalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Download Song"
+                    android:textColor="#2D0B1C"
+                    android:visibility="@{isSaved ? android.view.View.GONE : android.view.View.VISIBLE}"
+                    app:backgroundTint="#FDE6D2"
+                    app:cornerRadius="24dp"
                     app:icon="@android:drawable/stat_sys_download"
+                    app:iconTint="#2D0B1C"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/songAlbum" />
@@ -142,6 +156,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
+                    app:dividerColor="#3D1528"
                     app:layout_constraintTop_toBottomOf="@id/btnDownload" />
 
                 <LinearLayout
@@ -158,19 +173,24 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnOriginalLyrics"
-                        style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:text="Original" />
+                        android:text="Original"
+                        android:textColor="#2D0B1C"
+                        app:backgroundTint="#FDE6D2"
+                        app:cornerRadius="20dp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnRomanizedLyrics"
-                        style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="Romaji" />
+                        android:text="Romaji"
+                        android:textColor="#FDE6D2"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        app:strokeColor="#FDE6D2"
+                        app:cornerRadius="20dp" />
 
                 </LinearLayout>
 
@@ -182,6 +202,7 @@
                     android:lineSpacingExtra="8dp"
                     android:text='@{song.lyrics ?? "No lyrics found for this song."}'
                     android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="#FDE6D2"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"

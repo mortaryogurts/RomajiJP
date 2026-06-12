@@ -19,13 +19,13 @@
 
         <ImageView
             android:id="@+id/ivRecentIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_recent_history"
-            android:alpha="0.6"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@android:drawable/ic_menu_search"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:tint="#6D4B5C"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -35,23 +35,24 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:text="@{query}"
+            android:textColor="#2D0B1C"
             android:textSize="16sp"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/ivArrow"
+            app:layout_constraintEnd_toStartOf="@+id/ivDelete"
             app:layout_constraintStart_toEndOf="@+id/ivRecentIcon"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Plastic Love" />
 
         <ImageView
-            android:id="@+id/ivArrow"
+            android:id="@+id/ivDelete"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@android:drawable/ic_menu_send"
-            android:rotation="-135"
-            android:alpha="0.4"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:tint="#6D4B5C"
             tools:ignore="ContentDescription" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

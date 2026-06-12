@@ -53,6 +53,7 @@ class LyricsDisplay : AppCompatActivity() {
         binding.song = song
         binding.toolbar.title = title
 
+        checkIfSongIsSaved(title, artist)
         setupButtons()
 
         // If lyrics are missing, fetch them now
@@ -76,6 +77,7 @@ class LyricsDisplay : AppCompatActivity() {
             binding.song?.let { currentSong ->
                 lifecycleScope.launch {
                     repository.downloadSong(currentSong)
+                    binding.isSaved = true
                     android.widget.Toast.makeText(
                         this@LyricsDisplay,
                         "Song saved to library",
@@ -83,6 +85,12 @@ class LyricsDisplay : AppCompatActivity() {
                     ).show()
                 }
             }
+        }
+    }
+
+    private fun checkIfSongIsSaved(title: String, artist: String) {
+        lifecycleScope.launch {
+            binding.isSaved = repository.isSongSaved(title, artist)
         }
     }
 

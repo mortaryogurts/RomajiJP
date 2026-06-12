@@ -61,6 +61,7 @@ class MusicRepository(context: android.content.Context? = null) {
 
             // 3. Save to Cache if found
             if (lyrics != null) {
+                val existing = songDao?.getSong(cacheId)
                 songDao?.insertSong(
                     com.example.romajijp.db.SongCache(
                         cacheId = cacheId,
@@ -68,8 +69,9 @@ class MusicRepository(context: android.content.Context? = null) {
                         artist = artist,
                         album = album,
                         lyrics = lyrics,
-                        artworkUrl = null, // We can store this too if needed
-                        durationMillis = durationMillis
+                        artworkUrl = existing?.artworkUrl,
+                        durationMillis = durationMillis,
+                        isSaved = existing?.isSaved ?: false
                     )
                 )
             }
@@ -77,6 +79,11 @@ class MusicRepository(context: android.content.Context? = null) {
         } catch (e: Exception) {
             null
         }
+    }
+
+    suspend fun isSongSaved(title: String, artist: String): Boolean {
+        val cacheId = "${title.lowercase()}_${artist.lowercase()}"
+        return songDao?.getSong(cacheId)?.isSaved ?: false
     }
 
     suspend fun downloadSong(song: Song){
@@ -89,7 +96,8 @@ class MusicRepository(context: android.content.Context? = null) {
                 album = song.album,
                 lyrics = song.lyrics,
                 artworkUrl = song.artworkUrl,
-                durationMillis = song.durationMillis
+                durationMillis = song.durationMillis,
+                isSaved = true
             )
         )
     }
