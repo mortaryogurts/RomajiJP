@@ -6,6 +6,11 @@ import com.example.romajijp.model.Song
 import com.example.romajijp.retrofit.ITunesRetrofitClient
 import com.example.romajijp.retrofit.LrClibRetrofitClient
 import com.example.romajijp.uistate.MusicUiState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.invoke
 
 class MusicRepository(context: android.content.Context? = null) {
     private val lrclibApi: LrClibClient = LrClibRetrofitClient.instance
@@ -35,10 +40,10 @@ class MusicRepository(context: android.content.Context? = null) {
         }
     }
 
-    suspend fun fetchLyrics(title: String, artist: String, album: String?, durationMillis: Long): String? {
-        val cacheId = "${title.lowercase()}_${artist.lowercase()}"
+    suspend fun fetchLyrics(song: Song): String? {
+        val cacheId = "${song.title.lowercase()}_${song.artist.lowercase()}"
         
-        // 1. Try Cache
+        // 1. Try Cache (includes downloaded songs)
         val cached = songDao?.getSong(cacheId)
         if (cached?.lyrics != null) {
             return cached.lyrics
@@ -46,14 +51,14 @@ class MusicRepository(context: android.content.Context? = null) {
 
         // 2. Try Network
         return try {
-            val durationSeconds = (durationMillis / 1000).toInt()
+            val durationSeconds = (song.durationMillis / 1000).toInt()
             val lyrics = try {
                 // Exact match
-                val track = lrclibApi.getLyrics(title, artist, album ?: "", durationSeconds)
+                val track = lrclibApi.getLyrics(song.title, song.artist, song.album ?: "", durationSeconds)
                 track.plainLyrics
             } catch (e: Exception) {
                 // Fallback search
-                val searchResults = lrclibApi.searchLyrics(title, artist)
+                val searchResults = lrclibApi.searchLyrics(song.title, song.artist)
                 if (searchResults.isNotEmpty()) {
                     searchResults[0].plainLyrics
                 } else null
@@ -61,17 +66,16 @@ class MusicRepository(context: android.content.Context? = null) {
 
             // 3. Save to Cache if found
             if (lyrics != null) {
-                val existing = songDao?.getSong(cacheId)
                 songDao?.insertSong(
                     com.example.romajijp.db.SongCache(
                         cacheId = cacheId,
-                        title = title,
-                        artist = artist,
-                        album = album,
+                        title = song.title,
+                        artist = song.artist,
+                        album = song.album,
                         lyrics = lyrics,
-                        artworkUrl = existing?.artworkUrl,
-                        durationMillis = durationMillis,
-                        isSaved = existing?.isSaved ?: false
+                        artworkUrl = song.artworkUrl,
+                        durationMillis = song.durationMillis,
+                        isSaved = cached?.isSaved ?: false
                     )
                 )
             }

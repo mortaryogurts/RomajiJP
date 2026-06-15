@@ -35,7 +35,7 @@
             app:cardBackgroundColor="#FDE6D2"
             app:cardCornerRadius="28dp"
             app:cardElevation="4dp"
-            app:layout_constraintEnd_toStartOf="@+id/btnLibrary"
+            app:layout_constraintEnd_toStartOf="@+id/btnHome"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -76,6 +76,19 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHome"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="@{previousSearch ? View.VISIBLE : View.GONE}"
+            app:icon="@android:drawable/ic_menu_today"
+            app:iconTint="#FDE6D2"
+            app:layout_constraintEnd_toStartOf="@+id/btnLibrary"
+            app:layout_constraintStart_toEndOf="@+id/searchCard"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLibrary"
@@ -127,20 +140,36 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/searchCard" />
 
-        <TextView
-            android:id="@+id/Welcome"
+        <LinearLayout
+            android:id="@+id/WelcomeContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/welcome_to_nromaji"
-            android:textAlignment="center"
-            android:textColor="#FDE6D2"
-            android:textSize="40sp"
-            android:textStyle="bold"
+            android:gravity="center"
+            android:orientation="vertical"
             android:visibility="@{previousSearch ? View.GONE : View.VISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchCard" />
+            app:layout_constraintTop_toBottomOf="@+id/searchCard">
+
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginBottom="16dp"
+                android:alpha="0.3"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="#FDE6D2" />
+
+            <TextView
+                android:id="@+id/Welcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/welcome_to_nromaji"
+                android:textAlignment="center"
+                android:textColor="#FDE6D2"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- "Top Sheet" / Dropdown for Recent Searches -->
         <com.google.android.material.card.MaterialCardView

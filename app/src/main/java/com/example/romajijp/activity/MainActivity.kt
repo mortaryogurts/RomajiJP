@@ -41,17 +41,17 @@ import android.view.inputmethod.InputMethodManager
 import androidx.activity.addCallback
 
 class  MainActivity : AppCompatActivity() {
-
     private lateinit var historyManager: SearchHistoryManager
     private lateinit var historyAdapter: SearchHistoryAdapter
     private val searchHandler = Handler(Looper.getMainLooper())
     private var searchRunnable: Runnable? = null
-    private val DEBOUNCE_DELAY = 300L // ms
+    private val DEBOUNCE_DELAY = 150L // ms
     private lateinit var adapter: SongAdapter
     private val viewModel: MusicViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
     private var lastClickTime: Long = 0
     private val CLICK_INTERVAL = 500L
+    private var currentLoadingJob: kotlinx.coroutines.Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +76,13 @@ class  MainActivity : AppCompatActivity() {
         observeUiState()
 
         onBackPressedDispatcher.addCallback(this) {
+            // If we are currently loading lyrics, cancel that instead of closing the app
+            if (binding.isLoading == true) {
+                currentLoadingJob?.cancel()
+                binding.isLoading = false
+                return@addCallback
+            }
+
             if (binding.topSheetCard.visibility == android.view.View.VISIBLE) {
                 binding.getSong.clearFocus()
                 val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
@@ -90,6 +97,11 @@ class  MainActivity : AppCompatActivity() {
         binding.btnLibrary.setOnClickListener {
             val intent = Intent(this, LibraryActivity::class.java)
             startActivity(intent)
+        }
+
+        binding.btnHome.setOnClickListener {
+            viewModel.resetState()
+            binding.getSong.text.clear()
         }
 
         binding.main.setOnClickListener {
@@ -123,6 +135,11 @@ class  MainActivity : AppCompatActivity() {
                 true
             }else false
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.isLoading = false
     }
 
     private fun showTopSheet() {
@@ -177,14 +194,34 @@ class  MainActivity : AppCompatActivity() {
         if (currentTime - lastClickTime < CLICK_INTERVAL) return
         lastClickTime = currentTime
 
-        val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
-            putExtra("song_title", song.title)
-            putExtra("song_artist", song.artist)
-            putExtra("song_album", song.album)
-            putExtra("song_artwork", song.artworkUrl)
-            putExtra("song_duration", song.durationMillis)
+        // Cancel any previous loading job to prevent "ghost" activity launches
+        currentLoadingJob?.cancel()
+
+        currentLoadingJob = lifecycleScope.launch {
+            binding.isLoading = true
+            try {
+                val lyrics = viewModel.getLyrics(song)
+
+                // Only proceed if the coroutine wasn't cancelled and activity is still active
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                    val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
+                        putExtra("song_title", song.title)
+                        putExtra("song_artist", song.artist)
+                        putExtra("song_album", song.album)
+                        putExtra("song_artwork", song.artworkUrl)
+                        putExtra("song_duration", song.durationMillis)
+                        putExtra("song_lyrics", lyrics)
+                    }
+                    startActivity(intent)
+
+                    // Keep loader until transition starts
+                    kotlinx.coroutines.delay(800)
+                }
+            } finally {
+                // Ensure loading is reset if we didn't navigate or if we were cancelled
+                binding.isLoading = false
+            }
         }
-        startActivity(intent)
     }
 
     private fun performSearch(query: String) {

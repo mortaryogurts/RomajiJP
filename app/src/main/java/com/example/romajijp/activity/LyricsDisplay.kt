@@ -39,6 +39,16 @@ class LyricsDisplay : AppCompatActivity() {
         }
 
         binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.toolbar.inflateMenu(R.menu.lyrics_menu)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_download -> {
+                    downloadCurrentSong()
+                    true
+                }
+                else -> false
+            }
+        }
 
         transliterator = Transliterator.getInstance("Any-Latin; NFD; [:NonSpacing Mark:] Remove; NFC")
 
@@ -56,13 +66,8 @@ class LyricsDisplay : AppCompatActivity() {
         checkIfSongIsSaved(title, artist)
         setupButtons()
 
-        // If lyrics are missing, fetch them now
-        if (lyrics == null) {
-            fetchLyrics(song)
-        } else {
-            binding.isLoading = false
-            processLyrics(song, lyrics)
-        }
+        // Use passed lyrics or show not found
+        processLyrics(song, lyrics ?: "Lyrics not found.")
     }
 
     private fun setupButtons() {
@@ -72,59 +77,55 @@ class LyricsDisplay : AppCompatActivity() {
         binding.btnRomanizedLyrics.setOnClickListener {
             binding.lyricsText.text = romanizedLyrics
         }
+    }
 
-        binding.btnDownload.setOnClickListener {
-            binding.song?.let { currentSong ->
-                lifecycleScope.launch {
-                    repository.downloadSong(currentSong)
-                    binding.isSaved = true
-                    android.widget.Toast.makeText(
-                        this@LyricsDisplay,
-                        "Song saved to library",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
+    private fun downloadCurrentSong() {
+        binding.song?.let { currentSong ->
+            lifecycleScope.launch {
+                repository.downloadSong(currentSong)
+                binding.isSaved = true
+                updateDownloadButtonVisibility(true)
+                android.widget.Toast.makeText(
+                    this@LyricsDisplay,
+                    "Song saved to library",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
             }
         }
+    }
+
+    private fun updateDownloadButtonVisibility(isSaved: Boolean) {
+        binding.toolbar.menu.findItem(R.id.action_download)?.isVisible = !isSaved
     }
 
     private fun checkIfSongIsSaved(title: String, artist: String) {
         lifecycleScope.launch {
-            binding.isSaved = repository.isSongSaved(title, artist)
-        }
-    }
-
-    private fun fetchLyrics(song: Song) {
-        lifecycleScope.launch {
-            binding.isLoading = true
-            val fetchedLyrics = repository.fetchLyrics(
-                song.title,
-                song.artist,
-                song.album,
-                song.durationMillis
-            )
-            binding.isLoading = false
-            
-            if (fetchedLyrics != null) {
-                processLyrics(song, fetchedLyrics)
-            } else {
-                processLyrics(song, "Lyrics not found.")
-            }
+            val isSaved = repository.isSongSaved(title, artist)
+            binding.isSaved = isSaved
+            updateDownloadButtonVisibility(isSaved)
         }
     }
 
     private fun processLyrics(song: Song, lyrics: String) {
-        originalLyrics = lyrics
-        isJapanese = containsJapanese(lyrics)
-        binding.isJP = isJapanese
-        
-        if (isJapanese) {
-            romanizedLyrics = romanizeWithKuromoji(lyrics)
-        }
+        lifecycleScope.launch {
+            binding.isLoading = true
+            
+            val (isJP, romaji) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                val isJP = containsJapanese(lyrics)
+                val romaji = if (isJP) romanizeWithKuromoji(lyrics) else null
+                Pair(isJP, romaji)
+            }
 
-        song.lyrics = lyrics
-        binding.song = song 
-        binding.executePendingBindings()
+            originalLyrics = lyrics
+            isJapanese = isJP
+            romanizedLyrics = romaji
+            
+            binding.isJP = isJapanese
+            song.lyrics = lyrics
+            binding.song = song
+            binding.isLoading = false
+            binding.executePendingBindings()
+        }
     }
     fun containsJapanese(text: String): Boolean {
         return text.any { char ->
