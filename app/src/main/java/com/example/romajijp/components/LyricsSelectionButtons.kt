@@ -15,12 +15,12 @@ import androidx.compose.ui.unit.dp
 import com.example.romajijp.activity.ui.theme.BrandDarker
 import com.example.romajijp.activity.ui.theme.BrandPeach
 import com.example.romajijp.activity.ui.theme.RomajiJPTheme
+import com.example.romajijp.uistate.LyricsDisplayMode
 
 @Composable
 fun LyricsSelectionButtons(
-    isRomajiSelected: Boolean,
-    onOriginalClick: () -> Unit,
-    onRomajiClick: () -> Unit,
+    currentMode: LyricsDisplayMode,
+    onModeChange: (LyricsDisplayMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -28,50 +28,52 @@ fun LyricsSelectionButtons(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (!isRomajiSelected) {
-            Button(
-                onClick = onOriginalClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPeach,
-                    contentColor = BrandDarker
-                ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Text("Original")
-            }
-        } else {
-            OutlinedButton(
-                onClick = onOriginalClick,
-                border = BorderStroke(1.dp, BrandPeach),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Text("Original", color = BrandPeach)
-            }
-        }
+        LyricsModeButton(
+            text = "Kanji",
+            isSelected = currentMode == LyricsDisplayMode.ORIGINAL,
+            onClick = { onModeChange(LyricsDisplayMode.ORIGINAL) }
+        )
 
-        if (isRomajiSelected) {
-            Button(
-                onClick = onRomajiClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandPeach,
-                    contentColor = BrandDarker
-                ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Text("Romaji")
-            }
-        } else {
-            OutlinedButton(
-                onClick = onRomajiClick,
-                border = BorderStroke(1.dp, BrandPeach),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Text("Romaji", color = BrandPeach)
-            }
+        LyricsModeButton(
+            text = "Romaji",
+            isSelected = currentMode == LyricsDisplayMode.ROMAJI,
+            onClick = { onModeChange(LyricsDisplayMode.ROMAJI) }
+        )
+
+        LyricsModeButton(
+            text = "Furigana",
+            isSelected = currentMode == LyricsDisplayMode.FURIGANA,
+            onClick = { onModeChange(LyricsDisplayMode.FURIGANA) }
+        )
+    }
+}
+
+@Composable
+private fun LyricsModeButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    if (isSelected) {
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = BrandPeach,
+                contentColor = BrandDarker
+            ),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            Text(text)
+        }
+    } else {
+        OutlinedButton(
+            onClick = onClick,
+            border = BorderStroke(1.dp, BrandPeach),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            Text(text, color = BrandPeach)
         }
     }
 }
@@ -81,9 +83,8 @@ fun LyricsSelectionButtons(
 fun LyricsSelectionButtonsPreview() {
     RomajiJPTheme {
         LyricsSelectionButtons(
-            isRomajiSelected = true,
-            onOriginalClick = {},
-            onRomajiClick = {}
+            currentMode = LyricsDisplayMode.ROMAJI,
+            onModeChange = {}
         )
     }
 }

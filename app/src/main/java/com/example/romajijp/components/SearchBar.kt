@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -27,6 +28,7 @@ fun RomajiSearchBar(
     onQueryChange: (String) -> Unit,
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {},
     placeholder: String = "Search"
 ) {
     Card(
@@ -53,7 +55,9 @@ fun RomajiSearchBar(
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { onFocusChange(it.isFocused) },
                 placeholder = { Text(placeholder, color = Color(0xFF6D4B5C)) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -69,6 +73,17 @@ fun RomajiSearchBar(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearch(query) })
             )
+
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
+                        contentDescription = "Clear",
+                        tint = BrandDark,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
 }

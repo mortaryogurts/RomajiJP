@@ -2,6 +2,7 @@ package com.example.romajijp.apiclient
 
 import com.example.romajijp.model.ItunesResponse
 import com.example.romajijp.model.LrclibTrack
+import com.example.romajijp.model.MyMemoryResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -20,6 +21,14 @@ interface LrClibClient {
         @Query("duration") durationSeconds: Int
     ) : LrclibTrack
 
+}
+
+interface TranslationClient {
+    @GET("get")
+    suspend fun translate(
+        @Query("q") query: String,
+        @Query("langpair") langPair: String = "ja|en"
+    ): MyMemoryResponse
 }
 
 interface ITunesClient {

@@ -204,7 +204,7 @@ class  MainActivity : AppCompatActivity() {
 
                 // Only proceed if the coroutine wasn't cancelled and activity is still active
                 if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                    val intent = Intent(this@MainActivity, LyricsDisplay::class.java).apply {
+                    val intent = Intent(this@MainActivity, LyricsScreen::class.java).apply {
                         putExtra("song_title", song.title)
                         putExtra("song_artist", song.artist)
                         putExtra("song_album", song.album)

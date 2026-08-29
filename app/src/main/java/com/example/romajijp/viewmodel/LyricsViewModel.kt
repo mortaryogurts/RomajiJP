@@ -1,5 +1,6 @@
 package com.example.romajijp.viewmodel
 
+import android.R
 import android.app.Application
 import android.icu.text.Transliterator
 import androidx.lifecycle.AndroidViewModel
@@ -7,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.atilika.kuromoji.ipadic.Tokenizer
 import com.example.romajijp.model.Song
 import com.example.romajijp.repository.MusicRepository
+import com.example.romajijp.uistate.LyricsDisplayMode
+import com.example.romajijp.uistate.LyricsToken
 import com.example.romajijp.uistate.LyricsUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +22,7 @@ class LyricsViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = MusicRepository(application)
     private val tokenizer = Tokenizer()
     private val transliterator = Transliterator.getInstance("Any-Latin; NFD; [:NonSpacing Mark:] Remove; NFC")
+    private val hiraganaTransliterator = Transliterator.getInstance("Katakana-Hiragana")
 
     private val _uiState = MutableStateFlow(LyricsUiState())
     val uiState: StateFlow<LyricsUiState> = _uiState.asStateFlow()
@@ -48,14 +52,20 @@ class LyricsViewModel(application: Application) : AndroidViewModel(application) 
         withContext(Dispatchers.Default) {
             val isJP = containsJapanese(lyrics)
             val romaji = if (isJP) romanizeWithKuromoji(lyrics) else null
+            val furigana = if (isJP) tokenizeForFurigana(lyrics) else null
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 originalLyrics = lyrics,
                 romanizedLyrics = romaji,
+                furiganaLyrics = furigana,
                 isJapanese = isJP
             )
         }
+    }
+
+    fun updateDisplayMode(mode: LyricsDisplayMode) {
+        _uiState.value = _uiState.value.copy(displayMode = mode)
     }
 
     fun downloadSong(song: Song) {
@@ -116,7 +126,38 @@ class LyricsViewModel(application: Application) : AndroidViewModel(application) 
             .trim()
     }
 
+    private fun tokenizeForFurigana(text: String): List<LyricsToken> {
+        val tokens = tokenizer.tokenize(text)
+        return tokens.map { token ->
+            val surface = token.surface
+            val reading = token.reading
+
+            if (reading == null || reading == "*" || reading.isBlank() || isKanaOnly(surface)) {
+                LyricsToken(surface)
+            } else {
+                val hiraganaReading = hiraganaTransliterator.transliterate(reading)
+                LyricsToken(surface, hiraganaReading)
+            }
+        }
+    }
+
+    private fun isKanaOnly(text: String): Boolean {
+        return text.all { char ->
+            char.code in 0x3040..0x309F || // Hiragana
+            char.code in 0x30A0..0x30FF || // Katakana
+            isPunctuation(char.toString())
+        }
+    }
+
     private fun isPunctuation(text: String): Boolean {
         return text.all { it in "、。！？（）「」『』,.;:!?()[]{}<>\"' " || it == '　' || it.isWhitespace() }
     }
+    fun translateSelection(text : String){
+        viewModelScope.launch{
+            _uiState.value = _uiState.value.copy(translationResult = null) // Clear previous result
+            val translated = repository.translate(text)
+            _uiState.value = _uiState.value.copy(translationResult = translated ?: "Translation failed.")
+        }
+    }
 }
+

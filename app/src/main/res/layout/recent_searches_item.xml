@@ -19,8 +19,8 @@
 
         <ImageView
             android:id="@+id/ivRecentIcon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="21dp"
+            android:layout_height="11dp"
             android:src="@android:drawable/ic_menu_search"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

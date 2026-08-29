@@ -23,7 +23,13 @@
             android:exported="false" />
         <activity
             android:name=".activity.MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".activity.FirstScreen"
             android:exported="true"
+            android:label="@string/title_activity_first_screen"
+            android:theme="@style/Theme.RomajiJP"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +37,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.LyricsScreen"
+            android:exported="false"
+            android:label="@string/title_activity_lyrics_screen"
+            android:theme="@style/Theme.RomajiJP"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">RomajiJP</string>
     <string name="welcome_to_nromaji">Welcome to\nRomaji</string>
+    <string name="title_activity_first_screen">FirstScreen</string>
+    <string name="title_activity_lyrics_screen">LyricsScreen</string>
 </resources>

@@ -1,9 +1,12 @@
 package com.example.romajijp.repository
 
+import android.util.Log
 import com.example.romajijp.apiclient.ITunesClient
+import com.example.romajijp.apiclient.TranslationClient
 import com.example.romajijp.apiclient.LrClibClient
 import com.example.romajijp.model.Song
 import com.example.romajijp.retrofit.ITunesRetrofitClient
+import com.example.romajijp.retrofit.TranslationRetrofitClient
 import com.example.romajijp.retrofit.LrClibRetrofitClient
 import com.example.romajijp.uistate.MusicUiState
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +18,18 @@ import kotlinx.coroutines.invoke
 class MusicRepository(context: android.content.Context? = null) {
     private val lrclibApi: LrClibClient = LrClibRetrofitClient.instance
     private val iTunesApi: ITunesClient = ITunesRetrofitClient.instance
+    private val translationApi: TranslationClient = TranslationRetrofitClient.instance
     private val songDao by lazy { context?.let { com.example.romajijp.db.AppDatabase.getDatabase(it).songDao() } }
+
+    suspend fun translate(text: String): String? {
+        return try {
+            val response = translationApi.translate(query = text)
+            response.responseData.translatedText
+        } catch (e: Exception) {
+            Log.e("MusicRepository", "Translation failed: ${e.message}")
+            null
+        }
+    }
 
     suspend fun fetchSongData(userQuery: String): MusicUiState {
         return try {
@@ -46,22 +60,41 @@ class MusicRepository(context: android.content.Context? = null) {
         // 1. Try Cache (includes downloaded songs)
         val cached = songDao?.getSong(cacheId)
         if (cached?.lyrics != null) {
+            Log.d("MusicRepository", "Lyrics found in cache for ${song.title}")
             return cached.lyrics
         }
 
         // 2. Try Network
         return try {
             val durationSeconds = (song.durationMillis / 1000).toInt()
+            Log.d("MusicRepository", "Fetching lyrics for ${song.title} by ${song.artist}, duration: $durationSeconds")
             val lyrics = try {
-                // Exact match
+                // 1. Try Exact match
                 val track = lrclibApi.getLyrics(song.title, song.artist, song.album ?: "", durationSeconds)
+                Log.d("MusicRepository", "Exact match found: ${track.plainLyrics?.take(20)}...")
                 track.plainLyrics
             } catch (e: Exception) {
-                // Fallback search
-                val searchResults = lrclibApi.searchLyrics(song.title, song.artist)
+                Log.e("MusicRepository", "Exact match failed: ${e.message}")
+                
+                // 2. Try Search with Artist and Title
+                var searchResults = lrclibApi.searchLyrics(song.title, song.artist)
+                
+                // 3. Try Fallback search with first artist only if multiple artists exist
+                if (searchResults.isEmpty() && (song.artist.contains(" & ") || song.artist.contains(", "))) {
+                    val firstArtist = song.artist.split(Regex(" & |, ")).first().trim()
+                    Log.d("MusicRepository", "Trying fallback search with first artist: $firstArtist")
+                    searchResults = lrclibApi.searchLyrics(song.title, firstArtist)
+                }
+
+                Log.d("MusicRepository", "Search results count: ${searchResults.size}")
                 if (searchResults.isNotEmpty()) {
-                    searchResults[0].plainLyrics
-                } else null
+                    val result = searchResults[0].plainLyrics
+                    Log.d("MusicRepository", "Fallback match found: ${result?.take(20)}...")
+                    result
+                } else {
+                    Log.d("MusicRepository", "No lyrics found in search")
+                    null
+                }
             }
 
             // 3. Save to Cache if found
@@ -81,6 +114,7 @@ class MusicRepository(context: android.content.Context? = null) {
             }
             lyrics
         } catch (e: Exception) {
+            Log.e("MusicRepository", "Error fetching lyrics: ${e.message}", e)
             null
         }
     }

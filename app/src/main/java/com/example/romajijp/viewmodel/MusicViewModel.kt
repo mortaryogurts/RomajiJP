@@ -24,9 +24,7 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
             _uiState.value = result
 
-            if (result is MusicUiState.Success){
-                preFetchTopLyrics(result.songs.take(20))
-            }
+            // Removed pre-fetching to avoid rate limiting
         }
     }
 
@@ -36,14 +34,6 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     suspend fun getLyrics(song: Song): String? {
         return repository.fetchLyrics(song)
-    }
-
-    private fun preFetchTopLyrics(songs: List<Song>){
-        songs.forEach { song ->
-            viewModelScope.launch {
-                repository.fetchLyrics(song)
-            }
-        }
     }
 }
 

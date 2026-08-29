@@ -76,9 +76,8 @@ fun LibraryScreen(
                     SongCard(
                         song = song,
                         onClick = { onSongClick(song) },
+                        onLongClick = { onSongLongClick(song) },
                         modifier = Modifier.padding(4.dp)
-                        // Note: Long click is handled slightly differently in Compose
-                        // but for now we focus on the basic migration.
                     )
                 }
             }
